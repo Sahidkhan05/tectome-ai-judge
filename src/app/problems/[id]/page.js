@@ -9,7 +9,7 @@ import { problems } from "@/data/problems";
 import { motion, AnimatePresence } from "framer-motion";
 const Editor = dynamic(() => import("@monaco-editor/react"), { 
   ssr: false, 
-  loading: () => <div className="h-full w-full flex items-center justify-center bg-[#1e1e1e] text-[var(--muted)] font-mono text-sm animate-pulse">Initializing Neural Link...</div> 
+  loading: () => <div className="animate-pulse bg-gray-700/40 rounded-md h-full w-full min-h-[500px]" /> 
 });
 
 const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
@@ -236,12 +236,12 @@ export default function ProblemDetailPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[var(--background)] overflow-hidden selection:bg-[var(--accent)] selection:text-white">
+    <div suppressHydrationWarning className="h-screen w-full flex flex-col bg-[var(--background)] overflow-hidden selection:bg-[var(--accent)] selection:text-white">
       <Navbar />
 
-      <main className="flex-1 flex overflow-hidden p-2 md:p-4 gap-2 md:gap-4">
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden p-2 md:p-4 gap-2 md:gap-4 w-full">
         {/* Left Panel: Problem Context */}
-        <div className="w-[45%] flex flex-col gap-2 md:gap-4 overflow-hidden">
+        <div className="w-full md:w-[45%] min-h-[400px] flex flex-col gap-2 md:gap-4 overflow-hidden">
           <div className="flex-1 glass-card overflow-hidden flex flex-col border-[var(--border)]">
             <div className="flex items-center px-4 border-b border-[var(--border)] bg-[var(--foreground)]/[0.02] dark:bg-white/[0.02] shrink-0">
               {[
@@ -263,15 +263,17 @@ export default function ProblemDetailPage() {
               ))}
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--foreground)]/[0.01] dark:bg-white/[0.01]">
+            <div className="flex-1 overflow-y-auto custom-scroll bg-[var(--foreground)]/[0.01] dark:bg-white/[0.01]">
               <AnimatePresence mode="wait">
                 {activeTab === "description" ? (
                   <motion.div
                     key="desc"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    className="p-8 md:p-12 space-y-10"
+                    layout={false}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="p-8 md:p-12 space-y-10 will-change-transform"
                   >
                     <div className="space-y-6">
                       <div className="flex items-start justify-between">
@@ -376,9 +378,11 @@ export default function ProblemDetailPage() {
                 ) : (
                   <motion.div
                     key="res"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="h-full flex flex-col p-8 md:p-12"
+                    layout={false}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="h-full flex flex-col p-8 md:p-12 will-change-transform"
                   >
                     <div className="flex items-center justify-between mb-10">
                       <div className="flex items-center gap-4">
@@ -406,14 +410,14 @@ export default function ProblemDetailPage() {
                       )}
                     </div>
 
-                    <div className="flex-1 bg-black rounded-[2rem] p-10 font-mono text-sm border border-white/5 overflow-hidden flex flex-col premium-shadow relative group">
+                    <div className="flex-1 bg-black rounded-[2rem] p-10 font-mono text-sm border border-white/5 overflow-hidden flex flex-col relative group">
                       <div className="absolute top-6 right-8 flex gap-2 opacity-20 group-hover:opacity-100 transition-opacity">
                         <div className="w-3 h-3 rounded-full bg-red-500/50" />
                         <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
                         <div className="w-3 h-3 rounded-full bg-green-500/50" />
                       </div>
 
-                      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6">
+                      <div className="flex-1 overflow-y-auto custom-scroll space-y-6">
                         {status === "ready" && (
                           <div className="flex flex-col items-center justify-center h-full space-y-6 opacity-20">
                             <Cpu className="w-16 h-16 animate-pulse" />
@@ -475,10 +479,10 @@ export default function ProblemDetailPage() {
           </div>
 
           {/* AI Architect Panel */}
-          <div className={`glass-card transition-all duration-700 flex flex-col overflow-hidden border-[var(--border)] group ${aiExpanded ? "h-[65%]" : "h-16"} premium-shadow`}>
+          <div className={`glass-card transition-all duration-300 flex flex-col overflow-hidden border-[var(--border)] group ${aiExpanded ? "h-[65%] min-h-[400px]" : "h-16"} premium-shadow w-full`}>
             <button
               onClick={() => setAiExpanded(!aiExpanded)}
-              className="px-6 h-16 flex items-center justify-between hover:bg-[var(--foreground)]/[0.03] dark:hover:bg-white/[0.03] transition-colors shrink-0 border-b border-[var(--border)]/50"
+              className="px-6 h-16 flex items-center justify-between hover:bg-[var(--foreground)]/[0.03] dark:hover:bg-white/[0.03] transition-colors duration-150 shrink-0 border-b border-[var(--border)]/50 select-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[var(--accent)]"
             >
               <div className="flex items-center gap-4">
                 <div className={`p-1.5 rounded-lg transition-all duration-500 ${aiExpanded ? "bg-[var(--accent)] text-black shadow-[0_0_20px_rgba(59,130,246,0.3)]" : "bg-[var(--foreground)]/[0.05] text-[var(--muted)]"}`}>
@@ -509,9 +513,9 @@ export default function ProblemDetailPage() {
             </button>
 
             <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-transparent to-[var(--foreground)]/[0.02]">
-              <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar scroll-smooth">
+              <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scroll scroll-smooth max-h-[50vh]">
                 {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-20">
+                  <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-20 select-none">
                     <Cpu className="w-12 h-12" />
                     <p className="text-[10px] font-black uppercase tracking-[0.4em]">Awaiting Neural Input</p>
                   </div>
@@ -519,10 +523,11 @@ export default function ProblemDetailPage() {
                   messages.map((m, i) => (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                      className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                      layout={false}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className={`flex will-change-transform ${m.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                       <div className={`max-w-[90%] md:max-w-[80%] px-6 py-5 rounded-[2rem] text-sm leading-relaxed shadow-2xl transition-all duration-300 hover:scale-[1.01] ${m.role === "user"
                         ? "bg-white dark:bg-zinc-100 text-black font-bold rounded-tr-none border border-white/20"
@@ -545,12 +550,12 @@ export default function ProblemDetailPage() {
                 <div ref={chatEndRef} />
               </div>
 
-              <div className="p-6 border-t border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-2xl flex flex-col gap-4">
+              <div className="p-6 border-t border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm flex flex-col gap-4">
                 <div className="flex flex-wrap gap-3 justify-center max-w-4xl mx-auto w-full">
                   <button
                     disabled={isTyping}
                     onClick={() => sendMessage("Can you give me a small hint for this problem?")}
-                    className="flex-1 min-w-[140px] px-4 py-3 rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 premium-shadow hover:-translate-y-0.5"
+                    className="flex-1 min-w-[140px] px-4 py-3 min-h-[44px] rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-colors duration-150 text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 select-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   >
                     <Lightbulb className="w-4 h-4 text-[var(--gold)]" />
                     💡 Hint
@@ -559,7 +564,7 @@ export default function ProblemDetailPage() {
                   <button
                     disabled={isTyping}
                     onClick={() => sendMessage("Explain this problem in beginner-friendly language. No code solutions.")}
-                    className="flex-1 min-w-[140px] px-4 py-3 rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 premium-shadow hover:-translate-y-0.5"
+                    className="flex-1 min-w-[140px] px-4 py-3 min-h-[44px] rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-colors duration-150 text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 select-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   >
                     <BookOpen className="w-4 h-4 text-[var(--accent)]" />
                     📘 Explain Question
@@ -568,13 +573,13 @@ export default function ProblemDetailPage() {
                   <button
                     disabled={isTyping}
                     onClick={() => sendMessage("Analyze my current code and suggest optimization ideas only. No full code.")}
-                    className="flex-1 min-w-[140px] px-4 py-3 rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 premium-shadow hover:-translate-y-0.5"
+                    className="flex-1 min-w-[140px] px-4 py-3 min-h-[44px] rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-colors duration-150 text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 select-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   >
                     <Zap className="w-4 h-4 text-purple-500" />
                     ⚡ Optimize Solution
                   </button>
                 </div>
-                <div className="text-[8px] text-center mt-4 font-black uppercase tracking-[0.3em] text-[var(--muted)] opacity-50">
+                <div className="text-[8px] text-center mt-4 font-black uppercase tracking-[0.3em] text-[var(--muted)] opacity-50 select-none">
                   Secured Neural Link • End-to-End Encryption
                 </div>
               </div>
@@ -583,7 +588,7 @@ export default function ProblemDetailPage() {
         </div>
 
         {/* Right Panel: Editor Area */}
-        <div className="flex-1 glass-card overflow-hidden flex flex-col border-[var(--border)]">
+        <div className="w-full md:flex-1 glass-card overflow-hidden flex flex-col border-[var(--border)] min-h-[500px]">
           <div className="flex items-center justify-between px-8 h-20 border-b border-[var(--border)] bg-[var(--foreground)]/[0.02] dark:bg-white/[0.02] shrink-0">
             <div className="flex items-center gap-10">
               <div className="flex items-center gap-4">
@@ -624,7 +629,7 @@ export default function ProblemDetailPage() {
             </div>
           </div>
 
-          <div className="flex-1 relative group bg-[#0a0a0a]">
+          <div className="flex-1 relative group bg-[#0a0a0a] min-h-[400px] w-full overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/[0.03] to-transparent pointer-events-none z-10" />
             <Editor
               height="100%"
@@ -651,12 +656,16 @@ export default function ProblemDetailPage() {
                 scrollbar: {
                   vertical: 'hidden',
                   horizontal: 'hidden'
-                }
+                },
+                fixedOverflowWidgets: true,
+                renderWhitespace: "none",
+                smoothScrolling: true,
+                renderValidationDecorations: "off",
               }}
             />
           </div>
 
-          <div className="p-8 border-t border-[var(--border)] bg-[var(--background)]/50 backdrop-blur-xl flex items-center justify-between shrink-0">
+          <div className="p-8 border-t border-[var(--border)] bg-[var(--background)]/50 backdrop-blur-sm flex items-center justify-between shrink-0 select-none">
             <div className="flex items-center gap-8 pl-4">
               <div className="flex items-center gap-3 text-[10px] font-black text-[var(--muted)] uppercase tracking-[0.2em]">
                 <ShieldCheck className="w-5 h-5 text-green-500/70" />
