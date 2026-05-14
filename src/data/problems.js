@@ -10,10 +10,6 @@ export const problems = [
         input: "nums = [2,7,11,15], target = 9",
         output: "[0,1]",
         explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
-      },
-      {
-        input: "nums = [3,2,4], target = 6",
-        output: "[1,2]"
       }
     ],
     constraints: [
@@ -21,7 +17,17 @@ export const problems = [
       "-10^9 <= nums[i] <= 10^9",
       "-10^9 <= target <= 10^9",
       "Only one valid answer exists."
-    ]
+    ],
+    functionName: "solve",
+    testInputs: [
+      [[2, 7, 11, 15], 9],
+      [[3, 2, 4], 6]
+    ],
+    starterCode: {
+      javascript: `// Two Sum\nfunction solve(nums, target) {\n  // Your code here\n};`,
+      python: `# Two Sum\ndef solve(nums, target):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> solve(vector<int>& nums, int target) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 2,
@@ -40,7 +46,16 @@ export const problems = [
       "The number of nodes in each linked list is in the range [1, 100].",
       "0 <= Node.val <= 9",
       "It is guaranteed that the list represents a number that does not have leading zeros."
-    ]
+    ],
+    functionName: "solve",
+    testInputs: [
+      [[2, 4, 3], [5, 6, 4]]
+    ],
+    starterCode: {
+      javascript: `// Add Two Numbers\nfunction solve(l1, l2) {\n  // Your code here\n};`,
+      python: `# Add Two Numbers\ndef solve(l1, l2):\n    # Your code here\n    pass`,
+      cpp: `#include <iostream>\n#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    void solve() {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 3,
@@ -58,7 +73,18 @@ export const problems = [
     constraints: [
       "0 <= s.length <= 5 * 10^4",
       "s consists of English letters, digits, symbols and spaces."
-    ]
+    ],
+    functionName: "solve",
+    testInputs: [
+      ["abcabcbb"],
+      ["bbbbb"],
+      ["pwwkew"]
+    ],
+    starterCode: {
+      javascript: `// Longest Substring Without Repeating Characters\nfunction solve(s) {\n  // Your code here\n};`,
+      python: `# Longest Substring Without Repeating Characters\ndef solve(s):\n    # Your code here\n    pass`,
+      cpp: `#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int solve(string s) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 4,
@@ -75,7 +101,18 @@ export const problems = [
     ],
     constraints: [
       "1 <= s.length <= 10^4"
-    ]
+    ],
+    functionName: "solve",
+    testInputs: [
+      ["()[]{}"],
+      ["(]"],
+      ["([)]"]
+    ],
+    starterCode: {
+      javascript: `// Valid Parentheses\nfunction solve(s) {\n  // Your code here\n};`,
+      python: `# Valid Parentheses\ndef solve(s):\n    # Your code here\n    pass`,
+      cpp: `#include <string>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool solve(string s) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 5,
@@ -92,7 +129,17 @@ export const problems = [
     ],
     constraints: [
       "1 <= prices.length <= 10^5"
-    ]
+    ],
+    functionName: "solve",
+    testInputs: [
+      [[7, 1, 5, 3, 6, 4]],
+      [[7, 6, 4, 3, 1]]
+    ],
+    starterCode: {
+      javascript: `// Best Time to Buy and Sell Stock\nfunction solve(prices) {\n  // Your code here\n};`,
+      python: `# Best Time to Buy and Sell Stock\ndef solve(prices):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <iostream>\nusing namespace std;\n\nclass Solution {\npublic:\n    int solve(vector<int>& prices) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 6,
@@ -109,7 +156,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= nums1.length, nums2.length <= 200"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Merge Sorted Array\nfunction merge(nums1, m, nums2, n) {\n  // Your code here\n};`,
+      python: `# Merge Sorted Array\ndef merge(nums1, m, nums2, n):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 7,
@@ -126,7 +178,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= nums.length <= 10^4"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Binary Search\nfunction search(nums, target) {\n  // Your code here\n};`,
+      python: `# Binary Search\ndef search(nums, target):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 8,
@@ -143,7 +200,12 @@ export const problems = [
     ],
     constraints: [
       "The number of nodes is in the range [0, 5000]"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Reverse Linked List\n/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\nfunction reverseList(head) {\n  // Your code here\n};`,
+      python: `# Reverse Linked List\n# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\ndef reverseList(head):\n    # Your code here\n    pass`,
+      cpp: `/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* reverseList(ListNode* head) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 9,
@@ -160,7 +222,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= nums.length <= 10^5"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Maximum Subarray\nfunction maxSubArray(nums) {\n  // Your code here\n};`,
+      python: `# Maximum Subarray\ndef maxSubArray(nums):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <algorithm>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxSubArray(vector<int>& nums) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 10,
@@ -177,7 +244,12 @@ export const problems = [
     ],
     constraints: [
       "2 <= height.length <= 10^5"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Container With Most Water\nfunction maxArea(height) {\n  // Your code here\n};`,
+      python: `# Container With Most Water\ndef maxArea(height):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <algorithm>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxArea(vector<int>& height) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 11,
@@ -194,7 +266,12 @@ export const problems = [
     ],
     constraints: [
       "3 <= nums.length <= 3000"
-    ]
+    ],
+    starterCode: {
+      javascript: `// 3Sum\nfunction threeSum(nums) {\n  // Your code here\n};`,
+      python: `# 3Sum\ndef threeSum(nums):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <algorithm>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<int>> threeSum(vector<int>& nums) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 12,
@@ -211,7 +288,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= nums.length <= 5000"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Search in Rotated Sorted Array\nfunction search(nums, target) {\n  // Your code here\n};`,
+      python: `# Search in Rotated Sorted Array\ndef search(nums, target):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int search(vector<int>& nums, int target) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 13,
@@ -228,7 +310,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= strs.length <= 10^4"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Group Anagrams\nfunction groupAnagrams(strs) {\n  // Your code here\n};`,
+      python: `# Group Anagrams\ndef groupAnagrams(strs):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <string>\n#include <unordered_map>\n#include <algorithm>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<string>> groupAnagrams(vector<string>& strs) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 14,
@@ -245,7 +332,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= k <= nums.length"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Kth Largest Element in an Array\nfunction findKthLargest(nums, k) {\n  // Your code here\n};`,
+      python: `# Kth Largest Element in an Array\ndef findKthLargest(nums, k):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <queue>\nusing namespace std;\n\nclass Solution {\npublic:\n    int findKthLargest(vector<int>& nums, int k) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 15,
@@ -262,7 +354,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= s.length <= 1000"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Longest Palindromic Substring\nfunction longestPalindrome(s) {\n  // Your code here\n};`,
+      python: `# Longest Palindromic Substring\ndef longestPalindrome(s):\n    # Your code here\n    pass`,
+      cpp: `#include <string>\n#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    string longestPalindrome(string s) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 16,
@@ -279,7 +376,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= s.length <= 300"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Word Break\nfunction wordBreak(s, wordDict) {\n  // Your code here\n};`,
+      python: `# Word Break\ndef wordBreak(s, wordDict):\n    # Your code here\n    pass`,
+      cpp: `#include <string>\n#include <vector>\n#include <unordered_set>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool wordBreak(string s, vector<string>& wordDict) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 17,
@@ -296,7 +398,12 @@ export const problems = [
     ],
     constraints: [
       "k <= 10^4"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Merge k Sorted Lists\n/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\nfunction mergeKLists(lists) {\n  // Your code here\n};`,
+      python: `# Merge k Sorted Lists\n# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\ndef mergeKLists(lists):\n    # Your code here\n    pass`,
+      cpp: `/**\n * Definition for singly-linked list.\n * struct ListNode {\n *     int val;\n *     ListNode *next;\n *     ListNode() : val(0), next(nullptr) {}\n *     ListNode(int x) : val(x), next(nullptr) {}\n *     ListNode(int x, ListNode *next) : val(x), next(next) {}\n * };\n */\nclass Solution {\npublic:\n    ListNode* mergeKLists(vector<ListNode*>& lists) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 18,
@@ -313,7 +420,12 @@ export const problems = [
     ],
     constraints: [
       "1 <= height.length <= 2 * 10^4"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Trapping Rain Water\nfunction trap(height) {\n  // Your code here\n};`,
+      python: `# Trapping Rain Water\ndef trap(height):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <algorithm>\nusing namespace std;\n\nclass Solution {\npublic:\n    int trap(vector<int>& height) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 19,
@@ -330,7 +442,12 @@ export const problems = [
     ],
     constraints: [
       "nums1.length + nums2.length <= 2000"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Median of Two Sorted Arrays\nfunction findMedianSortedArrays(nums1, nums2) {\n  // Your code here\n};`,
+      python: `# Median of Two Sorted Arrays\ndef findMedianSortedArrays(nums1, nums2):\n    # Your code here\n    pass`,
+      cpp: `#include <vector>\n#include <algorithm>\nusing namespace std;\n\nclass Solution {\npublic:\n    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {\n        // Your code here\n    }\n};`
+    }
   },
   {
     id: 20,
@@ -347,8 +464,11 @@ export const problems = [
     ],
     constraints: [
       "1 <= wordList.length <= 5000"
-    ]
+    ],
+    starterCode: {
+      javascript: `// Word Ladder\nfunction ladderLength(beginWord, endWord, wordList) {\n  // Your code here\n};`,
+      python: `# Word Ladder\ndef ladderLength(beginWord, endWord, wordList):\n    # Your code here\n    pass`,
+      cpp: `#include <string>\n#include <vector>\n#include <unordered_set>\n#include <queue>\nusing namespace std;\n\nclass Solution {\npublic:\n    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {\n        // Your code here\n    }\n};`
+    }
   }
-
-
 ];

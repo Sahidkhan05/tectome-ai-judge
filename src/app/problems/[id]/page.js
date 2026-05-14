@@ -25,13 +25,14 @@ import {
   Settings,
   Cpu,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Star
 } from "lucide-react";
 
 const LANGUAGE_CONFIG = {
-  javascript: { label: "JavaScript", starterCode: `// Two Sum\nfunction solve(nums, target) {\n  // Your code here\n};`, monaco: "javascript" },
-  python: { label: "Python", starterCode: `# Two Sum\ndef solve(nums, target):\n    # Your code here\n    pass`, monaco: "python" },
-  cpp: { label: "C++", starterCode: `#include <iostream>\n#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> solve(vector<int>& nums, int target) {\n        // Your code here\n    }\n};`, monaco: "cpp" },
+  javascript: { label: "JavaScript", monaco: "javascript" },
+  python: { label: "Python", monaco: "python" },
+  cpp: { label: "C++", monaco: "cpp" },
 };
 
 export default function ProblemDetailPage() {
@@ -48,7 +49,15 @@ export default function ProblemDetailPage() {
   const [status, setStatus] = useState("ready"); // ready, running, success, error
   const [executionData, setExecutionData] = useState({ stdout: "", stderr: "", error: "" });
   const [language, setLanguage] = useState("javascript");
-  const [code, setCode] = useState(LANGUAGE_CONFIG.javascript.starterCode);
+  const [code, setCode] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  // Sync code with problem and language
+  useEffect(() => {
+    if (currentProblem?.starterCode?.[language]) {
+      setCode(currentProblem.starterCode[language]);
+    }
+  }, [currentProblem.id, language]);
 
   // Chat state
   const [messages, setMessages] = useState([
@@ -66,10 +75,20 @@ export default function ProblemDetailPage() {
         return;
       }
       setUser(session.user);
+      
+      // Check if favorited
+      const { data: favorite } = await supabase
+        .from("favorite_problems")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("problem_id", currentProblem.id)
+        .single();
+      
+      setIsFavorite(!!favorite);
     };
     checkUser();
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [supabase, router, messages]);
+  }, [supabase, router, messages, currentProblem.id]);
 
   const handleNextProblem = () => {
     const currentIndex = problems.findIndex((p) => p.id === currentProblem.id);
@@ -80,7 +99,7 @@ export default function ProblemDetailPage() {
       setStatus("ready");
       setExecutionData({ stdout: "", stderr: "", error: "" });
       setLanguage("javascript");
-      setCode(LANGUAGE_CONFIG.javascript.starterCode);
+      // useEffect handles code reset
     } else {
       router.push("/problems");
     }
@@ -130,7 +149,6 @@ export default function ProblemDetailPage() {
       setIsSubmitting(true);
       const result = await handleRunCode();
       if (result.status === "success") setShowNextButton(true);
-
       await supabase.from("submissions").insert([{
         user_id: user.id,
         problem_id: currentProblem.id,
@@ -139,10 +157,39 @@ export default function ProblemDetailPage() {
         code,
         status: result.status === "success" ? "Accepted" : "Wrong Answer",
       }]);
+
+      if (result.status === "success") {
+        await supabase.from("solved_problems").upsert([{
+          user_id: user.id,
+          problem_id: currentProblem.id,
+        }], { onConflict: 'user_id,problem_id' });
+      }
     } catch (err) {
       console.error("Submission error:", err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user) return router.push("/login");
+
+    try {
+      if (isFavorite) {
+        await supabase
+          .from("favorite_problems")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("problem_id", currentProblem.id);
+        setIsFavorite(false);
+      } else {
+        await supabase
+          .from("favorite_problems")
+          .insert([{ user_id: user.id, problem_id: currentProblem.id }]);
+        setIsFavorite(true);
+      }
+    } catch (err) {
+      console.error("Favorite toggle error:", err);
     }
   };
 
@@ -210,7 +257,19 @@ export default function ProblemDetailPage() {
                     <div className="space-y-6">
                       <div className="flex items-start justify-between">
                         <div className="space-y-4">
-                          <h1 className="text-5xl font-black tracking-tighter leading-none">{currentProblem.title}</h1>
+                          <div className="flex items-center gap-4">
+                            <h1 className="text-5xl font-black tracking-tighter leading-none">{currentProblem.title}</h1>
+                            <button
+                              onClick={handleToggleFavorite}
+                              className={`p-3 rounded-2xl border transition-all ${
+                                isFavorite 
+                                  ? "bg-[var(--gold)]/10 border-[var(--gold)]/20 text-[var(--gold)]" 
+                                  : "bg-[var(--foreground)]/[0.03] border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                              }`}
+                            >
+                              <Star className={`w-6 h-6 ${isFavorite ? "fill-current" : ""}`} />
+                            </button>
+                          </div>
                           <div className="flex items-center gap-3">
                             <div className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] border ${currentProblem.difficulty === "Easy" ? "bg-green-500/10 text-green-500 border-green-500/20" :
                               currentProblem.difficulty === "Medium" ? "bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/20" :
@@ -469,7 +528,6 @@ export default function ProblemDetailPage() {
                     key={lang}
                     onClick={() => {
                       setLanguage(lang);
-                      setCode(LANGUAGE_CONFIG[lang].starterCode);
                     }}
                     className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === lang ? "bg-[var(--foreground)] text-[var(--background)] shadow-xl" : "text-[var(--muted)] hover:text-[var(--foreground)]"
                       }`}
@@ -482,7 +540,7 @@ export default function ProblemDetailPage() {
 
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setCode(LANGUAGE_CONFIG[language].starterCode)}
+                onClick={() => setCode(currentProblem?.starterCode?.[language] || "")}
                 className="p-3 hover:bg-[var(--foreground)]/[0.05] dark:hover:bg-white/[0.05] rounded-2xl transition-colors border border-transparent hover:border-[var(--border)] group"
                 title="Reset Workspace"
               >

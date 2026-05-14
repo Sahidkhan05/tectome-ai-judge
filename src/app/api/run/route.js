@@ -2,6 +2,7 @@ import { spawn, spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { problems } from "@/data/problems";
 
 const LANGUAGE_MAP = {
   javascript: { ext: ".js", command: "node" },
@@ -11,10 +12,49 @@ const LANGUAGE_MAP = {
 
 export async function POST(req) {
   const body = await req.json();
-  const { code, input, language } = body;
+  const { code, language, problemId } = body;
 
   if (!code) {
     return Response.json({ error: "No code provided", status: "error" }, { status: 400 });
+  }
+
+  const problem = problems.find(p => p.id === problemId);
+  if (!problem) {
+    return Response.json({ error: "Problem not found", status: "error" }, { status: 404 });
+  }
+
+  const functionName = problem.functionName || "solve";
+  const testInputs = problem.testInputs || [];
+
+  let finalCode = code;
+  if (language === "javascript" && testInputs.length > 0) {
+    const testCasesCode = `
+\n// Test execution logic
+const testInputs = ${JSON.stringify(testInputs)};
+if (typeof ${functionName} === 'function') {
+  testInputs.forEach((input) => {
+    try {
+      const result = ${functionName}(...input);
+      console.log(JSON.stringify(result));
+    } catch (e) {
+      console.error(e.message);
+    }
+  });
+}`;
+    finalCode += testCasesCode;
+  } else if (language === "python" && testInputs.length > 0) {
+    const testCasesCode = `
+\n# Test execution logic
+import json
+if '${functionName}' in globals():
+    test_inputs = ${JSON.stringify(testInputs)}
+    for test_input in test_inputs:
+        try:
+            result = ${functionName}(*test_input)
+            print(json.dumps(result))
+        except Exception as e:
+            print(str(e), file=sys.stderr)`;
+    finalCode = "import sys\n" + finalCode + testCasesCode;
   }
 
   const langConfig = LANGUAGE_MAP[language] || LANGUAGE_MAP.javascript;
@@ -25,7 +65,7 @@ export async function POST(req) {
 
   try {
     // 1. Write the code to a temporary file
-    fs.writeFileSync(filePath, code);
+    fs.writeFileSync(filePath, finalCode);
 
     // 2. Handle Compilation (if required, e.g., C++)
     if (langConfig.compile) {
@@ -44,7 +84,7 @@ export async function POST(req) {
     const result = await new Promise((resolve) => {
       const cmd = langConfig.compile ? binaryPath : langConfig.command;
       const args = langConfig.compile ? [] : [filePath];
-      
+
       const child = spawn(cmd, args);
       let stdout = "";
       let stderr = "";
@@ -60,10 +100,7 @@ export async function POST(req) {
         });
       }, 5000);
 
-      if (input) {
-        child.stdin.write(input);
-        child.stdin.end();
-      }
+
 
       child.stdout.on("data", (data) => {
         stdout += data.toString();

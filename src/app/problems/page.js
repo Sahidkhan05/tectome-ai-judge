@@ -1,17 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { problems } from "@/data/problems";
+import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, ChevronRight, Trophy, Code2, Sparkles, LayoutGrid, List as ListIcon, Command } from "lucide-react";
+import { Search, Filter, ChevronRight, Trophy, Code2, Sparkles, LayoutGrid, List as ListIcon, Command, CheckCircle2, Star } from "lucide-react";
 
 export default function ProblemsPage() {
+  const supabase = createClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All"); // All, Solved, Unsolved, Favorites
   const [selectedTag, setSelectedTag] = useState("All");
   const [viewMode, setViewMode] = useState("list"); // list or grid
+  const [user, setUser] = useState(null);
+  const [solvedProblemIds, setSolvedProblemIds] = useState(new Set());
+  const [favoriteProblemIds, setFavoriteProblemIds] = useState(new Set());
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUser(session.user);
+        
+        // Fetch solved problems
+        const { data: solved } = await supabase
+          .from("solved_problems")
+          .select("problem_id")
+          .eq("user_id", session.user.id);
+        
+        if (solved) setSolvedProblemIds(new Set(solved.map(s => s.problem_id)));
+
+        // Fetch favorites
+        const { data: favorites } = await supabase
+          .from("favorite_problems")
+          .select("problem_id")
+          .eq("user_id", session.user.id);
+        
+        if (favorites) setFavoriteProblemIds(new Set(favorites.map(f => f.problem_id)));
+      }
+    };
+    fetchData();
+  }, [supabase]);
 
   const allTags = ["All", ...new Set(problems.flatMap((p) => p.tags || []))].sort(
     (a, b) => (a === "All" ? -1 : b === "All" ? 1 : a.localeCompare(b))
@@ -21,7 +53,13 @@ export default function ProblemsPage() {
     const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDifficulty = difficultyFilter === "All" || problem.difficulty === difficultyFilter;
     const matchesTag = selectedTag === "All" || problem.tags?.includes(selectedTag);
-    return matchesSearch && matchesDifficulty && matchesTag;
+    
+    let matchesStatus = true;
+    if (statusFilter === "Solved") matchesStatus = solvedProblemIds.has(problem.id);
+    else if (statusFilter === "Unsolved") matchesStatus = !solvedProblemIds.has(problem.id);
+    else if (statusFilter === "Favorites") matchesStatus = favoriteProblemIds.has(problem.id);
+
+    return matchesSearch && matchesDifficulty && matchesTag && matchesStatus;
   });
 
   return (
@@ -62,13 +100,29 @@ export default function ProblemsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 w-full lg:w-auto">
-            <div className="flex bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] p-1 rounded-2xl border border-[var(--border)] flex-1 lg:flex-none">
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
+            <div className="flex bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] p-1 rounded-2xl border border-[var(--border)] w-full md:w-auto overflow-x-auto no-scrollbar">
+              {["All", "Solved", "Unsolved", "Favorites"].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                    statusFilter === status
+                      ? "bg-[var(--foreground)] text-[var(--background)] shadow-2xl"
+                      : "text-[var(--muted)] hover:text-[var(--foreground)]"
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] p-1 rounded-2xl border border-[var(--border)] w-full md:w-auto overflow-x-auto no-scrollbar">
               {["All", "Easy", "Medium", "Hard"].map((diff) => (
                 <button
                   key={diff}
                   onClick={() => setDifficultyFilter(diff)}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                     difficultyFilter === diff
                       ? "bg-[var(--foreground)] text-[var(--background)] shadow-2xl"
                       : "text-[var(--muted)] hover:text-[var(--foreground)]"
@@ -142,9 +196,16 @@ export default function ProblemsPage() {
                   >
                     <div className="flex items-start lg:items-center gap-6 lg:gap-10">
                       <div className="relative shrink-0">
-                        <span className="text-xl font-black text-[var(--border)] group-hover:text-[var(--accent)] transition-colors duration-500 tabular-nums">
-                          {problem.id.toString().padStart(2, '0')}
-                        </span>
+                        {solvedProblemIds.has(problem.id) ? (
+                          <div className="relative w-10 h-10 flex items-center justify-center">
+                            <CheckCircle2 className="w-6 h-6 text-green-500" />
+                            <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full" />
+                          </div>
+                        ) : (
+                          <span className="text-xl font-black text-[var(--border)] group-hover:text-[var(--accent)] transition-colors duration-500 tabular-nums">
+                            {problem.id.toString().padStart(2, '0')}
+                          </span>
+                        )}
                         <div className="absolute -inset-2 bg-[var(--accent)]/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       
@@ -153,6 +214,9 @@ export default function ProblemsPage() {
                           <h2 className="text-2xl font-black tracking-tight group-hover:translate-x-1 transition-transform">
                             {problem.title}
                           </h2>
+                          {favoriteProblemIds.has(problem.id) && (
+                            <Star className="w-4 h-4 text-[var(--gold)] fill-current" />
+                          )}
                           {index < 3 && (
                             <div className="p-1 rounded-lg bg-red-500/10 text-red-500">
                               <Sparkles className="w-3.5 h-3.5 animate-pulse" />
@@ -202,7 +266,7 @@ export default function ProblemsPage() {
                   <p className="text-[var(--muted)] font-medium">Try adjusting your filters or search query.</p>
                 </div>
                 <button 
-                  onClick={() => { setSearchQuery(""); setDifficultyFilter("All"); setSelectedTag("All"); }}
+                  onClick={() => { setSearchQuery(""); setDifficultyFilter("All"); setStatusFilter("All"); setSelectedTag("All"); }}
                   className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--accent)] hover:underline"
                 >
                   Reset all filters
