@@ -1,17 +1,25 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai"; // npm install openai
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
     const { message, problemContext, code, language } = await req.json();
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return Response.json({
-        reply: "AI Mentor is currently offline. Please configure GEMINI_API_KEY in your environment."
+        reply: "AI Mentor is currently offline. Please configure OPENROUTER_API_KEY in your environment."
       });
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.OPENROUTER_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", });
+    if (!message || !problemContext) {
+      return Response.json({ reply: "Missing required fields." }, { status: 400 });
+    }
+
+    const client = new OpenAI({
+      baseURL: "https://openrouter.ai/api/v1",
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
 
     const systemPrompt = `You are an AI coding mentor inside a LeetCode-style platform.
 
@@ -33,19 +41,27 @@ ${code || "No code provided yet."}
 Language:
 ${language || "Not specified."}`;
 
-    const prompt = `${systemPrompt}\n\nUser Question: ${message}`;
+    const result = await client.chat.completions.create({
+      model: "google/gemini-2.0-flash-001", // OpenRouter model name
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: message }
+      ],
+    });
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = result.choices[0].message.content;
 
     return Response.json({ reply: text });
+
   } catch (err) {
-    console.error("Gemini API Error details:", {
+    console.error("OpenRouter API Error:", {
       message: err.message,
       stack: err.stack,
       status: err.status,
     });
-    return Response.json({ reply: "Sorry, I'm having trouble processing your request right now. Check logs for details." }, { status: 500 });
+    return Response.json(
+      { reply: "Sorry, I'm having trouble processing your request right now." },
+      { status: 500 }
+    );
   }
 }

@@ -4,6 +4,8 @@ import path from "path";
 import crypto from "crypto";
 import { problems } from "@/data/problems";
 
+export const dynamic = 'force-dynamic';
+
 const LANGUAGE_MAP = {
   javascript: { ext: ".js", command: "node" },
   python: { ext: ".py", command: "python3" },

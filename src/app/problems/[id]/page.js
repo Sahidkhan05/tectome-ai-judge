@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Navbar from "@/components/Navbar";
-import Editor from "@monaco-editor/react";
 import { problems } from "@/data/problems";
 import { motion, AnimatePresence } from "framer-motion";
-import ReactMarkdown from "react-markdown";
+const Editor = dynamic(() => import("@monaco-editor/react"), { 
+  ssr: false, 
+  loading: () => <div className="h-full w-full flex items-center justify-center bg-[#1e1e1e] text-[var(--muted)] font-mono text-sm animate-pulse">Initializing Neural Link...</div> 
+});
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 import remarkGfm from "remark-gfm";
 import {
   Play,
@@ -90,8 +95,11 @@ export default function ProblemDetailPage() {
       setIsFavorite(!!favorite);
     };
     checkUser();
+  }, [supabase, router, currentProblem.id]);
+
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [supabase, router, messages, currentProblem.id]);
+  }, [messages]);
 
   const handleNextProblem = () => {
     const currentIndex = problems.findIndex((p) => p.id === currentProblem.id);
@@ -108,7 +116,7 @@ export default function ProblemDetailPage() {
     }
   };
 
-  const handleRunCode = async () => {
+  const handleRunCode = useCallback(async () => {
     if (!user) {
       router.push("/login");
       return;
@@ -141,9 +149,9 @@ export default function ProblemDetailPage() {
       });
       return { status: "error" };
     }
-  };
+  }, [user, router, language, code, currentProblem.id]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!user) {
       router.push("/login");
       return;
@@ -172,9 +180,9 @@ export default function ProblemDetailPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [user, router, handleRunCode, currentProblem.id, currentProblem.title, language, code, supabase]);
 
-  const handleToggleFavorite = async () => {
+  const handleToggleFavorite = useCallback(async () => {
     if (!user) return router.push("/login");
 
     try {
@@ -194,10 +202,10 @@ export default function ProblemDetailPage() {
     } catch (err) {
       console.error("Favorite toggle error:", err);
     }
-  };
+  }, [user, router, isFavorite, currentProblem.id, supabase]);
 
-  const sendMessage = async (message) => {
-    if (!message || !message.trim()) return;
+  const sendMessage = useCallback(async (message) => {
+    if (!message || !message.trim() || isTyping) return;
 
     setMessages(prev => [...prev, { role: "user", content: message }]);
     setIsTyping(true);
@@ -220,7 +228,7 @@ export default function ProblemDetailPage() {
     } finally {
       setIsTyping(false);
     }
-  };
+  }, [isTyping, currentProblem.title, currentProblem.description, code, language]);
 
   const handleAIHint = async () => {
     if (!aiExpanded) setAiExpanded(true);
