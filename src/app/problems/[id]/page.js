@@ -7,6 +7,8 @@ import Navbar from "@/components/Navbar";
 import Editor from "@monaco-editor/react";
 import { problems } from "@/data/problems";
 import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Play,
   Send,
@@ -26,7 +28,8 @@ import {
   Cpu,
   AlertCircle,
   CheckCircle2,
-  Star
+  Star,
+  Lightbulb
 } from "lucide-react";
 
 const LANGUAGE_CONFIG = {
@@ -63,7 +66,7 @@ export default function ProblemDetailPage() {
   const [messages, setMessages] = useState([
     { role: "assistant", content: `Hello! I'm your AI Architect. Stuck on **${currentProblem.title}**? I can help with logic or time complexity.` },
   ]);
-  const [inputMessage, setInputMessage] = useState("");
+  // Input removed for structured actions
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef(null);
 
@@ -75,15 +78,15 @@ export default function ProblemDetailPage() {
         return;
       }
       setUser(session.user);
-      
+
       // Check if favorited
       const { data: favorite } = await supabase
         .from("favorite_problems")
         .select("id")
         .eq("user_id", session.user.id)
         .eq("problem_id", currentProblem.id)
-        .single();
-      
+        .maybeSingle();
+
       setIsFavorite(!!favorite);
     };
     checkUser();
@@ -113,7 +116,7 @@ export default function ProblemDetailPage() {
     setStatus("running");
     setActiveTab("result");
     setExecutionData({ stdout: "", stderr: "", error: "" });
-    
+
     try {
       const res = await fetch("/api/run", {
         method: "POST",
@@ -121,7 +124,7 @@ export default function ProblemDetailPage() {
         body: JSON.stringify({ language, code, problemId: currentProblem.id }),
       });
       const data = await res.json();
-      
+
       setStatus(data.status === "success" ? "success" : "error");
       setExecutionData({
         stdout: data.stdout || "",
@@ -193,19 +196,22 @@ export default function ProblemDetailPage() {
     }
   };
 
-  const sendMessage = async (e) => {
-    e?.preventDefault();
-    if (!inputMessage.trim()) return;
-    const userMsg = inputMessage;
-    setInputMessage("");
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+  const sendMessage = async (message) => {
+    if (!message || !message.trim()) return;
+
+    setMessages(prev => [...prev, { role: "user", content: message }]);
     setIsTyping(true);
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg, problemContext: currentProblem.title + ": " + currentProblem.description }),
+        body: JSON.stringify({
+          message: message,
+          problemContext: currentProblem.title + ": " + currentProblem.description,
+          code: code,
+          language: language
+        }),
       });
       const data = await res.json();
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
@@ -214,6 +220,11 @@ export default function ProblemDetailPage() {
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const handleAIHint = async () => {
+    if (!aiExpanded) setAiExpanded(true);
+    await sendMessage("Can you give me a small hint for this problem?");
   };
 
   return (
@@ -261,13 +272,18 @@ export default function ProblemDetailPage() {
                             <h1 className="text-5xl font-black tracking-tighter leading-none">{currentProblem.title}</h1>
                             <button
                               onClick={handleToggleFavorite}
-                              className={`p-3 rounded-2xl border transition-all ${
-                                isFavorite 
-                                  ? "bg-[var(--gold)]/10 border-[var(--gold)]/20 text-[var(--gold)]" 
-                                  : "bg-[var(--foreground)]/[0.03] border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
-                              }`}
+                              className={`p-3 rounded-2xl border transition-all ${isFavorite
+                                ? "bg-[var(--gold)]/10 border-[var(--gold)]/20 text-[var(--gold)]"
+                                : "bg-[var(--foreground)]/[0.03] border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                                }`}
                             >
                               <Star className={`w-6 h-6 ${isFavorite ? "fill-current" : ""}`} />
+                            </button>
+                            <button
+                              onClick={handleAIHint}
+                              className="px-6 py-3 rounded-2xl bg-[var(--accent)] text-black text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-lg shadow-[var(--accent)]/20 flex items-center gap-2"
+                            >
+                              <Sparkles className="w-4 h-4" /> AI Hint
                             </button>
                           </div>
                           <div className="flex items-center gap-3">
@@ -284,7 +300,7 @@ export default function ProblemDetailPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-2 pt-2">
                         {currentProblem.tags?.map(tag => (
                           <span key={tag} className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--muted)] bg-[var(--foreground)]/[0.03] px-3 py-1 rounded-lg border border-[var(--border)]/50">
@@ -358,12 +374,11 @@ export default function ProblemDetailPage() {
                   >
                     <div className="flex items-center justify-between mb-10">
                       <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-xl transition-all ${
-                          status === "running" ? "bg-[var(--gold)]/10 text-[var(--gold)]" : 
-                          status === "success" ? "bg-green-500/10 text-green-500" : 
-                          status === "error" ? "bg-red-500/10 text-red-500" : 
-                          "bg-[var(--foreground)]/[0.05] text-[var(--muted)]"
-                        }`}>
+                        <div className={`p-2 rounded-xl transition-all ${status === "running" ? "bg-[var(--gold)]/10 text-[var(--gold)]" :
+                          status === "success" ? "bg-green-500/10 text-green-500" :
+                            status === "error" ? "bg-red-500/10 text-red-500" :
+                              "bg-[var(--foreground)]/[0.05] text-[var(--muted)]"
+                          }`}>
                           {status === "success" ? <CheckCircle2 className="w-5 h-5" /> : status === "error" ? <AlertCircle className="w-5 h-5" /> : <Terminal className="w-5 h-5" />}
                         </div>
                         <div className="flex flex-col">
@@ -425,7 +440,7 @@ export default function ProblemDetailPage() {
                                 <pre className="text-green-400 whitespace-pre-wrap leading-relaxed opacity-90">{executionData.stdout}</pre>
                               </div>
                             )}
-                            
+
                             {(executionData.stderr || executionData.error) && (
                               <div className="space-y-3">
                                 <div className="text-[10px] font-black uppercase tracking-widest text-red-500/50 flex items-center gap-2">
@@ -452,60 +467,109 @@ export default function ProblemDetailPage() {
           </div>
 
           {/* AI Architect Panel */}
-          <div className={`glass-card transition-all duration-700 flex flex-col overflow-hidden border-[var(--border)] group ${aiExpanded ? "h-[65%]" : "h-16"}`}>
+          <div className={`glass-card transition-all duration-700 flex flex-col overflow-hidden border-[var(--border)] group ${aiExpanded ? "h-[65%]" : "h-16"} premium-shadow`}>
             <button
               onClick={() => setAiExpanded(!aiExpanded)}
-              className="px-6 h-16 flex items-center justify-between hover:bg-[var(--foreground)]/[0.03] dark:hover:bg-white/[0.03] transition-colors shrink-0"
+              className="px-6 h-16 flex items-center justify-between hover:bg-[var(--foreground)]/[0.03] dark:hover:bg-white/[0.03] transition-colors shrink-0 border-b border-[var(--border)]/50"
             >
               <div className="flex items-center gap-4">
-                <div className={`p-1.5 rounded-lg transition-colors ${aiExpanded ? "bg-[var(--accent)] text-black" : "bg-[var(--foreground)]/[0.05] text-[var(--muted)]"}`}>
+                <div className={`p-1.5 rounded-lg transition-all duration-500 ${aiExpanded ? "bg-[var(--accent)] text-black shadow-[0_0_20px_rgba(59,130,246,0.3)]" : "bg-[var(--foreground)]/[0.05] text-[var(--muted)]"}`}>
                   <Sparkles className="w-4 h-4" />
                 </div>
-                <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${aiExpanded ? "text-[var(--foreground)]" : "text-[var(--muted)]"}`}>
-                  AI Architect Insight
-                </span>
-                {isTyping && <div className="flex gap-1 ml-2"><div className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce" /><div className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:0.2s]" /></div>}
+                <div className="flex flex-col items-start">
+                  <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${aiExpanded ? "text-[var(--foreground)]" : "text-[var(--muted)]"}`}>
+                    AI Architect Insight
+                  </span>
+                  {aiExpanded && <span className="text-[8px] text-[var(--muted)] font-bold uppercase tracking-wider">Neural Engine Active</span>}
+                </div>
+                {isTyping && (
+                  <div className="flex gap-1 ml-2">
+                    <div className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce [animation-duration:0.6s]" />
+                    <div className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.2s]" />
+                    <div className="w-1 h-1 bg-[var(--accent)] rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.4s]" />
+                  </div>
+                )}
               </div>
-              <ChevronDown className={`w-4 h-4 transition-transform duration-500 ${aiExpanded ? "rotate-180" : ""}`} />
+              <div className="flex items-center gap-4">
+                {!aiExpanded && messages.length > 0 && (
+                  <div className="px-2 py-0.5 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] text-[8px] font-black uppercase">
+                    {messages.length} Units
+                  </div>
+                )}
+                <ChevronDown className={`w-4 h-4 transition-transform duration-500 text-[var(--muted)] ${aiExpanded ? "rotate-180" : ""}`} />
+              </div>
             </button>
 
-            <div className="flex-1 flex flex-col min-h-0 bg-[var(--foreground)]/[0.01] dark:bg-white/[0.01]">
-              <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
-                {messages.map((m, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className={`max-w-[85%] px-6 py-5 rounded-[1.5rem] text-sm leading-relaxed shadow-sm ${m.role === "user"
-                      ? "bg-[var(--foreground)] text-[var(--background)] font-bold rounded-tr-none"
-                      : "bg-white dark:bg-zinc-900 border border-[var(--border)] font-medium rounded-tl-none"
-                      }`}>
-                      {m.content}
-                    </div>
-                  </motion.div>
-                ))}
+            <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-transparent to-[var(--foreground)]/[0.02]">
+              <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar scroll-smooth">
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-20">
+                    <Cpu className="w-12 h-12" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em]">Awaiting Neural Input</p>
+                  </div>
+                ) : (
+                  messages.map((m, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                      className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div className={`max-w-[90%] md:max-w-[80%] px-6 py-5 rounded-[2rem] text-sm leading-relaxed shadow-2xl transition-all duration-300 hover:scale-[1.01] ${m.role === "user"
+                        ? "bg-white dark:bg-zinc-100 text-black font-bold rounded-tr-none border border-white/20"
+                        : "bg-[#0c0c0e] dark:bg-[#0c0c0e] border border-white/5 text-zinc-300 font-medium rounded-tl-none markdown-content"
+                        }`}>
+                        {m.role === "assistant" ? (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {m.content}
+                          </ReactMarkdown>
+                        ) : (
+                          m.content
+                        )}
+                        <div className={`text-[8px] mt-3 font-black uppercase tracking-widest opacity-30 ${m.role === "user" ? "text-black/60" : "text-white/60"}`}>
+                          {m.role === "user" ? "User Sync" : "Architect System"}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
                 <div ref={chatEndRef} />
               </div>
 
-              <form onSubmit={sendMessage} className="p-6 border-t border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md flex gap-4">
-                <div className="flex-1 relative group">
-                  <input
-                    type="text"
-                    placeholder="Inquire about architectural patterns..."
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    className="w-full bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-transparent focus:border-[var(--border)] rounded-2xl px-6 py-4 text-sm focus:ring-4 focus:ring-[var(--accent)]/5 outline-none transition-all placeholder:text-[var(--muted)] font-bold pr-12"
-                  />
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2">
-                    <Cpu className="w-4 h-4 text-[var(--muted)] group-focus-within:text-[var(--accent)] transition-colors" />
-                  </div>
+              <div className="p-6 border-t border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-2xl flex flex-col gap-4">
+                <div className="flex flex-wrap gap-3 justify-center max-w-4xl mx-auto w-full">
+                  <button
+                    disabled={isTyping}
+                    onClick={() => sendMessage("Can you give me a small hint for this problem?")}
+                    className="flex-1 min-w-[140px] px-4 py-3 rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 premium-shadow hover:-translate-y-0.5"
+                  >
+                    <Lightbulb className="w-4 h-4 text-[var(--gold)]" />
+                    💡 Hint
+                  </button>
+                  
+                  <button
+                    disabled={isTyping}
+                    onClick={() => sendMessage("Explain this problem in beginner-friendly language. No code solutions.")}
+                    className="flex-1 min-w-[140px] px-4 py-3 rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 premium-shadow hover:-translate-y-0.5"
+                  >
+                    <BookOpen className="w-4 h-4 text-[var(--accent)]" />
+                    📘 Explain Question
+                  </button>
+
+                  <button
+                    disabled={isTyping}
+                    onClick={() => sendMessage("Analyze my current code and suggest optimization ideas only. No full code.")}
+                    className="flex-1 min-w-[140px] px-4 py-3 rounded-xl bg-[var(--foreground)]/[0.03] dark:bg-white/[0.03] border border-[var(--border)]/50 hover:border-[var(--accent)]/50 hover:bg-[var(--accent)]/5 transition-all text-xs font-bold text-[var(--foreground)] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 premium-shadow hover:-translate-y-0.5"
+                  >
+                    <Zap className="w-4 h-4 text-purple-500" />
+                    ⚡ Optimize Solution
+                  </button>
                 </div>
-                <button className="bg-[var(--accent)] p-4 rounded-2xl text-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[var(--accent)]/10">
-                  <Send className="w-6 h-6" />
-                </button>
-              </form>
+                <div className="text-[8px] text-center mt-4 font-black uppercase tracking-[0.3em] text-[var(--muted)] opacity-50">
+                  Secured Neural Link • End-to-End Encryption
+                </div>
+              </div>
             </div>
           </div>
         </div>
